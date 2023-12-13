@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: finetune-fp4
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: nvidia.com/gpu.product
+                  operator: In
+                  values:
+                  - NVIDIA-A10
+      containers:
+      - name: finetune-fp4-container
+        image: pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+        command: ["/bin/bash","-c"]
+        args: ["pip install -U -r /qlora/qlora/requirements.txt;
+                python /qlora/ft_scripts/finetune_fp4.py;
+                "]
+        volumeMounts:
+        - mountPath: /qlora
+          name: qlora-volume
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            memory: "24G"
+            cpu: "4"
+          requests:
+            nvidia.com/gpu: "1"
+            memory: "24G"
+            cpu: "4"
+      - name: finetune-fp4-dq-container
+        image: pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+        command: ["/bin/bash","-c"]
+        args: ["pip install -U -r /qlora/qlora/requirements.txt;
+                python /qlora/ft_scripts/finetune_fp4_dq.py;
+                "]
+        volumeMounts:
+        - mountPath: /qlora
+          name: qlora-volume
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            memory: "24G"
+            cpu: "4"
+          requests:
+            nvidia.com/gpu: "1"
+            memory: "24G"
+            cpu: "4"
+      restartPolicy: Never
+      volumes:
+        - name: qlora-volume
+          persistentVolumeClaim:
+            claimName: qlora-volume

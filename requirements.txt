@@ -1,0 +1,9 @@
+bitsandbytes
+transformers
+peft
+accelerate
+einops
+evaluate
+scikit-learn
+sentencepiece
+wandb
